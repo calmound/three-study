@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect } from 'react';
 import {
   WebGLRenderer,
   PerspectiveCamera,
@@ -7,10 +7,11 @@ import {
   Mesh,
   DirectionalLight,
   MeshPhongMaterial,
-} from "three";
+} from 'three';
 
 const HelloThreejs = () => {
   const canvasRef = useRef(null);
+  const resizeHandleRef = useRef(null);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -35,11 +36,24 @@ const HelloThreejs = () => {
       //创建材质
       //我们需要让立方体能够反射光，所以不使用MeshBasicMaterial，而是改用MeshPhongMaterial
       //const material = new MeshBasicMaterial({ color: 0x44aa88 })
-      const material = new MeshPhongMaterial({ color: 0x44aa88 });
+      const material1 = new MeshPhongMaterial({ color: 0x44aa88 });
+      const material2 = new MeshPhongMaterial({ color: 0xc50d0d });
+      const material3 = new MeshPhongMaterial({ color: 0x39b20a });
 
       //创建网格
-      const cube = new Mesh(geometry, material);
-      scene.add(cube); //将网格添加到场景中
+      const cube1 = new Mesh(geometry, material1);
+      cube1.position.x = -2;
+      scene.add(cube1); //将网格添加到场景中
+
+      const cube2 = new Mesh(geometry, material2);
+      cube2.position.x = 0;
+      scene.add(cube2);
+
+      const cube3 = new Mesh(geometry, material3);
+      cube3.position.x = 2;
+      scene.add(cube3);
+
+      const cubes = [cube1, cube2, cube3];
 
       //创建光源
       const light = new DirectionalLight(0xffffff, 1);
@@ -57,16 +71,39 @@ const HelloThreejs = () => {
       //添加自动旋转渲染动画
       const render = (time) => {
         time = time * 0.001; //原本 time 为毫秒，我们这里对 time 进行转化，修改成 秒，以便于我们动画旋转角度的递增
-        cube.rotation.x = time;
-        cube.rotation.y = time;
+        const canvas = renderer.domElement;
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+
+        cubes.map((cube) => {
+          cube.rotation.x = time;
+          cube.rotation.y = time;
+        });
         renderer.render(scene, camera);
         window.requestAnimationFrame(render);
       };
       window.requestAnimationFrame(render);
+
+      const handleResize = () => {
+        const canvas = renderer.domElement;
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+      };
+      handleResize();
+      resizeHandleRef.current = handleResize;
     }
+    return () => {
+      if (resizeHandleRef && resizeHandleRef.current) {
+        window.removeEventListener('resize', resizeHandleRef.current);
+      }
+    };
   }, [canvasRef]);
 
-  return <canvas ref={canvasRef} />;
+  return <canvas ref={canvasRef} className="full-screen" />;
 };
 
 export default HelloThreejs;
